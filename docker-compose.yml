@@ -1,0 +1,96 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:10
+    container_name: postgres
+    ports:
+      - "5000:5432"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: db_user
+      POSTGRES_PASSWORD: db_password
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+  zookeeper:
+    build:
+      context: ./zookeeper
+    container_name: zookeeper
+    expose:
+      - 2181
+      - 2888
+      - 3888
+
+  broker1:
+    build:
+      context: ./kafka
+    container_name: broker1
+    expose:
+      - 9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker1:9092"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+  broker2:
+    build:
+      context: ./kafka
+    container_name: broker2
+    expose:
+      - 9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker2:9092"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+  schema:
+    build:
+      context: ./schema-registry
+    container_name: schema
+    expose: 
+      - 8081
+    environment: 
+      SCHEMA_BROKERS: "PLAINTEXT://broker1:9092,PLAINTEXT://broker2:9092"
+      SCHEMA_LISTENERS: "http://schema:8081"
+    depends_on: 
+      - broker1
+      - broker2
+      
+  connector:
+    build:
+      context: ./connector
+    container_name: connector
+    depends_on: 
+      - broker1
+      - broker2
+    ports:
+      - 8083:8083
+    volumes:
+      - ./multidb-connector:/opt/multidb-connector
+      - ./kafka-connect-jdbc-multidb:/opt/kafka-connect-jdbc-multidb
+
+  ksql:
+    build:
+      context: ./ksql
+    container_name: ksql
+    expose:
+      - 8088
+    environment:
+      KSQL_BROKERS: "broker1:9092,broker2:9092"
+      KSQL_LISTENERS: "http://ksql:8088,http://localhost:8088"
+      KSQL_SCHEMA_REGISTRY: "http://schema:8081"
+      KSQL_CONNECT_URL: "http://connector:8083"
+    depends_on:
+      - broker1
+      - broker2
+      - schema
+      - connector
+
+networks:
+  default:
+    name: kafkaCDC

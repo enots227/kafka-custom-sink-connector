@@ -1,0 +1,3 @@
+/opt/multidb-connector/src/main/java/multidb/connector/sink/MultiDBSinkConfig.java
+/opt/multidb-connector/src/main/java/multidb/connector/sink/MultiDBSinkTask.java
+/opt/multidb-connector/src/main/java/multidb/connector/MultiDBSinkConnector.java

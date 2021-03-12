@@ -1,0 +1,27 @@
+CREATE STREAM TEST01 (
+    RK VARCHAR(255) KEY,
+    COL1 INT,
+    COL2 VARCHAR(MAX)
+)
+WITH (
+    topic='test01',
+    partitions=1,
+    value_format='avro'
+);
+
+INSERT INTO test01
+(RK, COL1, COL2)
+VALUES
+('A', 1, 'HELLO');
+
+INSERT INTO test01
+(RK, COL1, COL2)
+VALUES
+('B', 2, 'BYE');
+
+PRINT test01 FROM BEGINNING;
+
+SHOW TOPICS;
+
+-- After curl request to set up connector.
+SHOW CONNECTORS;
