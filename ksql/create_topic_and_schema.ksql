@@ -4,7 +4,7 @@ CREATE STREAM TEST01 (
     COL2 VARCHAR(MAX)
 )
 WITH (
-    topic='test01',
+    kafka_topic='test01',
     partitions=1,
     value_format='avro'
 );
@@ -25,3 +25,13 @@ SHOW TOPICS;
 
 -- After curl request to set up connector.
 SHOW CONNECTORS;
+
+-- Tables are ways for ksql to query Kafka
+CREATE TABLE t1 (
+    RK VARCHAR(255) PRIMARY KEY,
+    COL1 INT,
+    COL2 VARCHAR(MAX)
+) WITH (
+    KAFKA_TOPIC='test01',
+    VALUE_FORMAT='avro'
+);
